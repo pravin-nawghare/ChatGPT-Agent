@@ -1,0 +1,58 @@
+# Langchain Core
+langchain
+langchain-core
+langchain-community
+langchain-text-splitters
+langgraph
+langgraph-checkpoint-sqlite
+
+
+# Google Gemini (PaLM) Integration
+langchain-google-genai
+google-generativeai
+
+# Groq Api
+langchain-groq
+
+# Hugging Face Integration
+langchain-huggingface
+transformers
+huggingface-hub
+sentence-transformers
+
+# Environment variable Management
+python-dotenv 
+python-multipart
+
+
+# for fast storage and retrieval used only with hugging face --> not installed yet
+# hf-xet
+
+# Data Validation
+pydantic
+
+# To visualize pipeline (chains)
+grandalf
+
+# For pdf loader
+pypdf
+docx2txt
+
+# Vector Store
+langchain-chroma
+chromadb
+
+# Jupyter Notebook Support
+ipykernel
+
+# For ui
+streamlit
+
+# API
+fastapi
+uvicorn
+jinja2
+
+langchain-tavily
+tavily-python
+sqlalchemy
