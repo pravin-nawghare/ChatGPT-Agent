@@ -10,7 +10,7 @@ class Settings:
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY")
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY")
     TAVILY_API_KEY: str = os.getenv("TAVILY_API_KEY")
-    HUGGINGFACEHUB_API_TOKEN: str = os.getenv("HUGGINGFACEHUB_API_TOKEN")
+    HF_TOKEN: str = os.getenv("HUGGINGFACEHUB_API_TOKEN")
 
     # LLM models
     GEMINI_MODEL= "gemini-2.5-flash"

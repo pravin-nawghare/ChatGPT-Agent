@@ -216,3 +216,16 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# architecture
+architecture.excalidraw
+
+# db
+chroma_db
+
+# user data
+data
+
+# user uploads
+uploads
+project_flow.txt

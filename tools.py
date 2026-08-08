@@ -7,7 +7,7 @@ from rag import retrieve_context
 
 from langchain_core.tools import tool
 from langchain_tavily import TavilySearch
-
+print("inside tools.py file\n")
 # to load previous interactions of user
 CURRENT_THREAD_ID = settings.CURRENT_THREAD_ID
 
@@ -15,6 +15,7 @@ def set_current_thread(thread_id: str):
     "not provided use 'default' otherwise thread_id"
     global CURRENT_THREAD_ID 
     CURRENT_THREAD_ID = thread_id
+    print("inside set_current_thread method setting current thread_id\n")
 
 
 # create tools
@@ -23,7 +24,7 @@ web_search = TavilySearch( # no tool decorator because Tavily is inherientaly a 
     topic = "general",
     search_depth = "advanced"
 )
-
+print("web search tool created\n")
 @tool
 def calculator(expression: str) -> str:
     """
@@ -40,7 +41,7 @@ def calculator(expression: str) -> str:
             "max": max,
             "sum" : sum
         }
-
+        print("inside calculator tool\n")
         result = eval(expression, {"__builtins__": {}}, allowed)
         return str(result)
 
@@ -51,6 +52,7 @@ def calculator(expression: str) -> str:
 def remember_this(memory: str):
     "Save am important user preference or fact into long-termm memory"
     "Use this when the user asks you to remember something"
+    print("inside remember this tool\n")
     return save_memory(
         thread_id=CURRENT_THREAD_ID,
         memory = memory
@@ -61,6 +63,7 @@ def recall_memory(query: str):
     """
     Recall saved long-term memories about the user or this conversation
     """
+    print("inside recall_memory tool\n")
     return search_memory(
         thread_id=CURRENT_THREAD_ID,
         query= query
@@ -70,11 +73,12 @@ def recall_memory(query: str):
 def search_uploaded_documnets(query: str) -> str:
     "Search uploaded documnets for revelant information"
     "Use this when the user asks about uploaded PDFs, TXT, notes, files or documents"
+    print("inside search_uploaded_documents tool\n")
     return retrieve_context(
         query = query,
         thread_id=CURRENT_THREAD_ID
     )
-
+print("creating tools list\n")
 tools = [
     calculator,
     remember_this,

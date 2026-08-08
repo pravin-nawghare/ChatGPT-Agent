@@ -22,7 +22,7 @@ Path("data").mkdir(exist_ok=True)
 # create agent
 def chat_agent(model_name: str):
     "Build agent using langgraph framework for selected LLM model"
-
+    print("inside agent.py file and method chat_agent\n")
     selected_model = normalize_model_name(model_name)
 
     # Initialize the llm model
@@ -31,15 +31,15 @@ def chat_agent(model_name: str):
         temperature = 0.3, # More values gives more creative responses, drift away from grouonded responses
         streaming = True
         )
-
+    print("llm model initialize")
     # provide tools for the agent
     llm_with_tools = llm_model.bind_tools(tools)
-
+    print("tools are binded to llm model\n")
     def chatbot_node(state: MessagesState):
         messages = [SystemMessage(content=SYSTEM_PROMPT)] + state['messages']
-
+        print("inside chatbot_node method\n")
         response = llm_with_tools.invoke(messages)
-
+        print("invoked the responses\n")
         return {
             "messages": [response]
         }
@@ -47,7 +47,7 @@ def chat_agent(model_name: str):
     tool_node = ToolNode(tools)
 
     graph = StateGraph(MessagesState)
-
+    print("creating graph\n")
     # add nodes to the graph
     graph.add_node("chatbot", chatbot_node)
     graph.add_node("tools", tool_node)
@@ -64,9 +64,9 @@ def chat_agent(model_name: str):
         "data/langgraph_checkpoints.sqlite",
         check_same_thread = False, # By default no multi-threading is allowed, but 'False' helps us to create multi-threads
     )
-
+    print("db connection initialized\n")
     custom_checkpointer = SqliteSaver(connection)
-
+    print("db connection made\n")
     return graph.compile(checkpointer = custom_checkpointer)
 
 _AGENT_CACHE = {}
@@ -77,8 +77,8 @@ def get_agent(model_name: str | None = None):
     If not created yet, create it once and reuse it.
     """
     selected_model = normalize_model_name(model_name)
-
+    print("inside get_agent method")
     if selected_model not in _AGENT_CACHE:
         _AGENT_CACHE[selected_model] = chat_agent(selected_model)
-
-    return _AGENT_CACHE
+    print("agent cache is made with selected llm model")
+    return _AGENT_CACHE[selected_model]

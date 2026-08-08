@@ -10,18 +10,18 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 Path("data").mkdir(exist_ok=True)
 
 database_url = settings.DATABASE_URL
-
+print("inside database.py file and data folder and db url created\n")
 engine = create_engine(
     database_url,
     connect_args = {"check_same_thread": False}
 )
-
+print("connection engine for db created")
 SessionLocal = sessionmaker(
     bnd=engine, 
     autoflush=False, 
     autocommit= False
 )
-
+print("local session for db created\n")
 Base = declarative_base()
 
 class Conversation(Base):
@@ -34,7 +34,7 @@ class Conversation(Base):
     updated_at = Column(DateTime, default=datetime.utcnow)
 
 class ChatMessage(Base):
-    __tabename__ = "caht_messages"
+    __tablename__ = "caht_messages"
 
     id = Column(Integer, primary_key=True, index=True)
     thread_id = Column(String, unique=True, index=True)
@@ -53,17 +53,17 @@ class LongTremMemomry(Base):
 
 def init_db():
     Base.metadata.create_all(bind=engine)
-
+    print("init_db method inside")
 def create_or_update_conservation(thread_id: str, first_message: str | None = None):
     db = SessionLocal()
-
+    print("inside create_or_update_conservation\n")
     try:
         conversation = (
             db.query(Conversation)
             .filter(Conversation.thread_id ==thread_id)
             .first()
         )
-
+        print("fetching conversation based on thread_id\n")
         if not conversation:
             title = "New Chat"
 
@@ -71,7 +71,7 @@ def create_or_update_conservation(thread_id: str, first_message: str | None = No
                 title = first_message.strip()[:20]
                 if len(first_message.strip()) > 20:
                     title += "...."
-
+            print("name for new chat provided based on first message")
             conversation = Conversation(
                 thread_id = thread_id,
                 title = title,
@@ -80,28 +80,29 @@ def create_or_update_conservation(thread_id: str, first_message: str | None = No
             )
 
             db.add(conversation)
-
+            print("saving new conversation to db\n")
         else:
             conversation.updated_at = datetime.utcnow()
-
+            print("appending conversation into previous conversaation\n")
         db.commit()
 
     finally:
         db.close()
+        print("closed db connection after saving conversation\n")
 
 def list_conversation():
     db = SessionLocal()
-
+    print("inside list_conversation method\n")
     try:
         return (
             db.query(Conversation)
             .order_by(Conversation.updated_at.desc())
             .all()
         )
-
+        
     finally:
         db.close()
-
+        print("printing a list of all conversation\n")
 def save_user_chat_message(thread_id: str, role: str, content: str):
     db = SessionLocal()
 
@@ -114,7 +115,7 @@ def save_user_chat_message(thread_id: str, role: str, content: str):
         )
 
         db.add(msg)
-
+        print("inside save_user_chat_message metod and adding user messages into db\n")
         conversation = (
             db.query(Conversation)
             .filter(Conversation.thread_id == thread_id)
@@ -123,7 +124,7 @@ def save_user_chat_message(thread_id: str, role: str, content: str):
 
         if conversation:
             conversation.updated_at = datetime.utcnow()
-
+        print("adding messages to previous chat history\n")
         db.commit()
 
     finally: 
@@ -133,6 +134,7 @@ def get_user_chat_history(thread_id: str, memory: str):
     db = SessionLocal()
 
     try:
+        print("inside get_user_chat_history methid and fetching user chat history\n")
         return (
             db.query(ChatMessage)
             .filter(ChatMessage.thread_id == thread_id)
@@ -142,11 +144,12 @@ def get_user_chat_history(thread_id: str, memory: str):
 
     finally:
         db.close()
-
+        
 def save_memory(thread_id: str, memory: str):
     db = SessionLocal()
 
     try:
+        print("inside save_memory method and saving loaded conversation into db\n")
         item = LongTremMemomry(
             thread_id = thread_id,
             memory = memory,
@@ -155,7 +158,7 @@ def save_memory(thread_id: str, memory: str):
 
         db.add(item)
         db.commit()
-
+        print("successsfully added conversation to db\n")
         return "Memory saved successfully"
     finally:
         db.close()
@@ -171,7 +174,7 @@ def search_memory(thread_id: str, query: str):
             .limit(10)
             .all()
         )
-
+        print("inside search_memory method and searching specific chats from memory\n")
         if not memories:
             return "No saved memory found"
 
