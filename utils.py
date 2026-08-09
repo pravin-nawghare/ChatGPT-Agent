@@ -100,13 +100,16 @@ def should_stream_chunk(chunk, metadata) -> bool:
     return True
 
 def extract_text_from_chunk(chunk) -> str:
+    """
+    to stream the text from the chunk, we need to extract the text from the chunk object
+    """
     content =  getattr(chunk, "content", "")
 
     if not content:
         return ""
 
     if isinstance(content, str):
-        return ""
+        return content
 
     if isinstance(content,  list):
         text_parts = []

@@ -17,7 +17,7 @@ engine = create_engine(
 )
 print("connection engine for db created")
 SessionLocal = sessionmaker(
-    bnd=engine, 
+    bind=engine, 
     autoflush=False, 
     autocommit= False
 )
@@ -25,7 +25,7 @@ print("local session for db created\n")
 Base = declarative_base()
 
 class Conversation(Base):
-    __tablename__ = "conversation"
+    __tablename__ = "conversations"
 
     id = Column(Integer, primary_key=True, index=True)
     thread_id = Column(String, unique=True, index=True)
@@ -34,20 +34,19 @@ class Conversation(Base):
     updated_at = Column(DateTime, default=datetime.utcnow)
 
 class ChatMessage(Base):
-    __tablename__ = "caht_messages"
+    __tablename__ = "chat_messages"
 
     id = Column(Integer, primary_key=True, index=True)
-    thread_id = Column(String, unique=True, index=True)
-    title = Column(String, default="New Chat")
+    thread_id = Column(String, index=True)
     role = Column(String)
     content = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-class LongTremMemomry(Base):
+class LongTermMemory(Base):
     __tablename__ = "long_term_memory"
 
     id = Column(Integer, primary_key=True, index=True)
-    thread_id = Column(String, unique=True, index=True)
+    thread_id = Column(String, index=True)
     memory = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow)
 
@@ -90,7 +89,7 @@ def create_or_update_conservation(thread_id: str, first_message: str | None = No
         db.close()
         print("closed db connection after saving conversation\n")
 
-def list_conversation():
+def list_conversations():
     db = SessionLocal()
     print("inside list_conversation method\n")
     try:
@@ -150,7 +149,7 @@ def save_memory(thread_id: str, memory: str):
 
     try:
         print("inside save_memory method and saving loaded conversation into db\n")
-        item = LongTremMemomry(
+        item = LongTermMemory(
             thread_id = thread_id,
             memory = memory,
             created_at = datetime.utcnow()
@@ -168,9 +167,9 @@ def search_memory(thread_id: str, query: str):
 
     try:
         memories = (
-            db.query(LongTremMemomry)
-            .filter(LongTremMemomry.thread_id == thread_id)
-            .order_by(LongTremMemomry.created_at.desc())
+            db.query(LongTermMemory)
+            .filter(LongTermMemory.thread_id == thread_id)
+            .order_by(LongTermMemory.created_at.desc())
             .limit(10)
             .all()
         )
@@ -178,7 +177,7 @@ def search_memory(thread_id: str, query: str):
         if not memories:
             return "No saved memory found"
 
-        return "\n".join({f"- {m.memory}" for m in memories})
+        return "\n".join([f"- {m.memory}" for m in memories])
 
     finally:
         db.close()

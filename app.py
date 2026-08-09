@@ -11,13 +11,12 @@ from fastapi.responses import StreamingResponse, JSONResponse
 from agent import get_agent
 from config import settings
 from database import (init_db, save_user_chat_message, get_user_chat_history, 
-                      create_or_update_conservation, list_conversation)
+                      create_or_update_conservation, list_conversations)
 from rag import add_document_to_vector_store
 from tools import set_current_thread
 from utils import sse_data, should_stream_chunk, extract_text_from_chunk
 
-from langchain_core.messages import HumanMessage, AIMessage, AIMessageChunk, ToolMessage
-
+from langchain_core.messages import HumanMessage
 
 setting = settings
 # agent = get_agent("gemini-2.5-flash")
@@ -38,23 +37,23 @@ setting = settings
 
 app = FastAPI()
 
-Path("uploads").mkdir(exist_ok=True)
-Path("data").mkdir(exist_ok=True)
+Path("uploads").mkdir(exist_ok=True) # to save user uploaded files
+Path("data").mkdir(exist_ok=True)    # to save user chat history and conversation data
 
-# init_db()
+init_db()
 print("inside app.py file and database initialize\n")
 
-@app.get("/home")
+@app.get("/home") # this is the home route
 async def home(request: Request):
     # return request
     return {"message":"Working prperly"}
 
 @app.get("/conversations")
 async def conversations(): # view previous conversation on sidebar
-    items = list_conversation()
+    items = list_conversations()
 
     return {
-        "conversation": [
+        "conversations": [
             {
                 "thread_id": item.thread_id,
                 "title" : item.title,
@@ -79,7 +78,7 @@ async def history(thread_id: str): # load previous conversation on chat page
         ]
     }
 
-@app.post("/upload")
+@app.post("/upload")  # route to upload user files and get processed and added to vector store for rag 
 async def upload_document(
     file: UploadFile = File(...),
     thread_id: str = Form(...)
@@ -127,8 +126,8 @@ async def upload_document(
             status_code=500
         )
 
-@app.post("/chat/stream")
-async def chat_stream(request: str):
+@app.post("/chat/stream")  # to get chat stream at frontend
+async def chat_stream(request: Request):
     try:
         data = await request.json()
     except Exception as e:
@@ -150,8 +149,8 @@ async def chat_stream(request: str):
 
     agent = get_agent(selected_model)
 
-    create_or_update_conservation(thread_id=thread_id, first_message=user_message)
-    save_user_chat_message(thread_id, "user", user_message)
+    create_or_update_conservation(thread_id=thread_id, first_message=user_message) # add the conversation to database if not already present or update if already present
+    save_user_chat_message(thread_id, "user", user_message) # save current chat into database
 
     set_current_thread(thread_id)
 
@@ -161,7 +160,7 @@ async def chat_stream(request: str):
         }
     }
 
-    def event_generator():
+    def event_generator(): # this function will stream the response from the agent to the frontend using fastapi StreamingResponse
         final_answer = ""
 
         try:
