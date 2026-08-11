@@ -95,17 +95,66 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+BACKEND_URL = "http://localhost:8080"  # FastAPI backend URL
+
+response = requests.get(f"{BACKEND_URL}/conversations")
+
+if response.status_code == 200:
+    conversations = response.json().get("conversations")
+else:
+    conversations = []
+
 # Sidebar
 with st.sidebar:
-    st.button(
+    if st.button(
         "✎ᝰ.  New chat",
         
         use_container_width=True
+    ):
+        st.session_state.thread_id = str(uuid.uuid4())
+        st.session_state.messages = []  # Reset messages for the new conversation
+        st.rerun()
+
+    st.markdown("### Recents ")
+
+    for conversation in conversations:
+        thread_id_item = conversation["thread_id"]
+        title = conversation["title"]
+
+        if st.button(
+            title,
+            key= f"conversation_{conversation['thread_id']}",
+            use_container_width=True
+        ):
+            st.session_state.thread_id = thread_id_item
+
+            history_response = requests.get(
+                f"{BACKEND_URL}/history/{thread_id_item}"
+            )
+
+            if history_response.status_code == 200:
+                st.session_state.messages = (
+                    history_response.json().get("messages")
+                )
+            st.rerun()
+
+if not st.session_state.messages:
+    st.markdown(
+        '<div class="chat-welcome">Where should we begin?</div>',
+        unsafe_allow_html=True
     )
 
-st.markdown(
-    '<div class="chat-welcome">Where should we begin?</div>',
-    unsafe_allow_html=True
+st.sidebar.divider()
+
+selected_model = st.sidebar.selectbox(
+    "Model",
+    [
+        "gemini-2.5-flash",           
+        "gemini-3.0-flash",
+        "gemini-2.5-pro",
+        "gemini-2.5-flash-lite",
+        "gemini-3.0-pro",
+    ]
 )
 
 # Display previous messages
@@ -121,6 +170,31 @@ user_input = st.chat_input(
 if user_input:
     user_message = user_input.text
 
+    # Handle file upload
+    if user_input.files:
+        for uploaded_file in user_input.files:
+            files = {
+                "file": (
+                    uploaded_file.name,
+                    uploaded_file.getvalue(),
+                    uploaded_file.type
+                )
+            }
+
+            data = {"thread_id": thread_id}
+
+            uploaded_response = requests.post(
+                f"{BACKEND_URL}/upload",
+                files=files,
+                data=data
+            )
+
+            if uploaded_response.status_code == 200:
+                result = uploaded_response.json()
+                st.success(result["message"])
+            else:
+                st.error(f"Upload failed: {uploaded_response.text}")
+
     # store the message
     st.session_state.messages.append({
         "role": "user",
@@ -134,11 +208,11 @@ if user_input:
     payload = {
         "message": user_message,
         "thread_id": thread_id,
-        "model": "gemini-2.5-flash"
+        "model": selected_model
     }
     st.write("Payload:", payload)
     response = requests.post(
-        "http://localhost:8080/chat/stream",
+        f"{BACKEND_URL}/chat/stream",
         json=payload,
         headers = {"Content-Type": "application/json"},
         stream=True

@@ -105,7 +105,7 @@ async def upload_document(
         with open(file_path, "wb") as f:
             f.write(await file.read())
 
-        create_or_update_conservation("Uploaded documents",thread_id=thread_id)
+        create_or_update_conservation(first_message="Uploaded documents",thread_id=thread_id)
 
         result = add_document_to_vector_store(
             file_path=file_path,

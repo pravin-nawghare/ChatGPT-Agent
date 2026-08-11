@@ -129,7 +129,7 @@ def save_user_chat_message(thread_id: str, role: str, content: str):
     finally: 
         db.close()
 
-def get_user_chat_history(thread_id: str, memory: str):
+def get_user_chat_history(thread_id: str):
     db = SessionLocal()
 
     try:
