@@ -37,6 +37,7 @@ grandalf
 # For pdf loader
 pypdf
 docx2txt
+pdfplumber
 
 # Vector Store
 langchain-chroma
@@ -56,3 +57,20 @@ jinja2
 langchain-tavily
 tavily-python
 sqlalchemy
+
+# High-speed HTML text extraction
+beautifulsoup4
+
+# Base library for DOCX/PPTX partitioning
+unstructured
+python-pptx
+python-docx
+
+# Guardrails
+guardrails-ai
+guardrails-ai-toxic-language
+guardrails-ai-detect-jailbreak
+
+# post install command in terminal
+# python -m guardrails_ai.toxic_language.post_install
+# python -m guardrails_ai.detect_jailbreak.post_install

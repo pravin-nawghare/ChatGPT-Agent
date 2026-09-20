@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import List
 from config import settings
 from utils import read_files_text
+from utils import jailbreak_guard, toxicity_guard, JailbreakException
 
 from langchain_chroma import Chroma
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
@@ -70,21 +71,30 @@ def add_document_to_vector_store(file_path: str, thread_id: str):
     }
 
 def retrieve_context(query: str, thread_id: str, k: int = 5) -> str:
-    docs = vector_store.similarity_search(
-        query,
-        k=k,
-        filter = {"thread_id":thread_id}
-    )
-    print("inside retrieve_context method\n")
-    if not docs:
-        return "No revelant uploaded document content found"
+    try:
+        jailbreak_guard.validate(query)
 
-    results = []
-    print("retrieving context from vector store\n")
-    for i,doc in enumerate(docs, start = 1):
-        source = doc.metadata.get("source", "uploaded documents")
-        results.append(
-            f"[Source {i}: {source}]\n{doc.page_content}"
+        docs = vector_store.similarity_search(
+            query,
+            k=k,
+            filter = {"thread_id":thread_id}
         )
-    print("context reterieved\n")
-    return "\n\n".join(results)
+        print("inside retrieve_context method\n")
+        if not docs:
+            return "No revelant uploaded document content found"
+
+        results = []
+        print("retrieving context from vector store\n")
+        for i,doc in enumerate(docs, start = 1):
+            source = doc.metadata.get("source", "uploaded documents")
+            results.append(
+                f"[Source {i}: {source}]\n{doc.page_content}"
+            )
+        print("context reterieved\n")
+        # toxicity_guard.validate(llm_output)
+        return "\n\n".join(results)
+    except JailbreakException:
+        return {
+        "status": "blocked",
+        "message": "Your request could not be processed. Please rephrase your question."
+        }

@@ -4,6 +4,7 @@ import sqlite3
 from pathlib import Path
 
 from config import settings
+from utils import jailbreak_guard, JailbreakException, ToxicLanguageException, toxicity_guard
 
 from langgraph.graph import START, END, StateGraph, MessagesState
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -36,6 +37,23 @@ def chat_agent(model_name: str):
     llm_with_tools = llm_model.bind_tools(tools)
     print("tools are binded to llm model\n")
     def chatbot_node(state: MessagesState):
+        # --------------------------------------------------
+        # adding guard to detect jail breaking 
+        # --------------------------------------------------
+        user_message = state['messages'][-1].content  # last user input
+
+        # Run guardrails before invoking LLM or tools
+        try:
+            if jailbreak_guard.validate(user_message):
+                raise JailbreakException("Potential jailbreak attempt detected.")
+            if toxicity_guard.validate(user_message):
+                raise ToxicLanguageException("Toxic language detected.")
+        except (JailbreakException, ToxicLanguageException) as e:
+            # Return a safe, neutral message instead of crashing
+            return {
+                "messages": [SystemMessage(content="Your request could not be processed safely. Please rephrase.")]
+            }
+        # ---------------------------------------------------
         messages = [SystemMessage(content=SYSTEM_PROMPT)] + state['messages']
         print("inside chatbot_node method\n")
         response = llm_with_tools.invoke(messages)

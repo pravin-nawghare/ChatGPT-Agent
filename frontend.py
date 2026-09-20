@@ -3,6 +3,7 @@ import streamlit as st
 import uuid
 import json
 import requests
+from utils import jailbreak_guard, JailbreakException
 
 
 # Initialize current conversation thread id in session state if not already present
@@ -166,80 +167,82 @@ user_input = st.chat_input(
     accept_file=True,
     file_type=[".pdf", ".txt", ".csv", ".docx", ".py", ".md"]
 )
+try:
+    if user_input:
+        user_message = user_input.text
+        jailbreak_guard.validate(user_message)
+        # Handle file upload
+        if user_input.files:
+            for uploaded_file in user_input.files:
+                files = {
+                    "file": (
+                        uploaded_file.name,
+                        uploaded_file.getvalue(),
+                        uploaded_file.type
+                    )
+                }
 
-if user_input:
-    user_message = user_input.text
+                data = {"thread_id": thread_id}
 
-    # Handle file upload
-    if user_input.files:
-        for uploaded_file in user_input.files:
-            files = {
-                "file": (
-                    uploaded_file.name,
-                    uploaded_file.getvalue(),
-                    uploaded_file.type
+                uploaded_response = requests.post(
+                    f"{BACKEND_URL}/upload",
+                    files=files,
+                    data=data
                 )
-            }
 
-            data = {"thread_id": thread_id}
+                if uploaded_response.status_code == 200:
+                    result = uploaded_response.json()
+                    st.success(result["message"])
+                else:
+                    st.error(f"Upload failed: {uploaded_response.text}")
 
-            uploaded_response = requests.post(
-                f"{BACKEND_URL}/upload",
-                files=files,
-                data=data
-            )
+        # store the message
+        st.session_state.messages.append({
+            "role": "user",
+            "content": user_message
+        })
 
-            if uploaded_response.status_code == 200:
-                result = uploaded_response.json()
-                st.success(result["message"])
-            else:
-                st.error(f"Upload failed: {uploaded_response.text}")
+        # Display the user message
+        st.chat_message("user").markdown(user_message)
 
-    # store the message
-    st.session_state.messages.append({
-        "role": "user",
-        "content": user_message
-    })
+        # Send to FastAPI
+        payload = {
+            "message": user_message,
+            "thread_id": thread_id,
+            "model": selected_model
+        }
+        st.write("Payload:", payload)
+        response = requests.post(
+            f"{BACKEND_URL}/chat/stream",
+            json=payload,
+            headers = {"Content-Type": "application/json"},
+            stream=True
+        )
 
-    # Display the user message
-    st.chat_message("user").markdown(user_message)
+        # Display assistant response
+        assistant_response = ""
 
-    # Send to FastAPI
-    payload = {
-        "message": user_message,
-        "thread_id": thread_id,
-        "model": selected_model
-    }
-    st.write("Payload:", payload)
-    response = requests.post(
-        f"{BACKEND_URL}/chat/stream",
-        json=payload,
-        headers = {"Content-Type": "application/json"},
-        stream=True
-    )
+        assistant_container = st.chat_message("assistant")
+        placeholder = assistant_container.empty()
 
-    # Display assistant response
-    assistant_response = ""
+        for line in response.iter_lines(decode_unicode=True):
+            if not line:
+                continue
 
-    assistant_container = st.chat_message("assistant")
-    placeholder = assistant_container.empty()
+            if line.startswith("data:"):
+                data = json.loads(line[5:].strip())
 
-    for line in response.iter_lines(decode_unicode=True):
-        if not line:
-            continue
+                if "token" in data:
+                    assistant_response += data["token"]
+                    placeholder.markdown(assistant_response)
 
-        if line.startswith("data:"):
-            data = json.loads(line[5:].strip())
-
-            if "token" in data:
-                assistant_response += data["token"]
-                placeholder.markdown(assistant_response)
-
-    # Store assistant response
-    st.session_state.messages.append({
-        "role": "assistant",
-        "content": assistant_response
-    })
+        # Store assistant response
+        st.session_state.messages.append({
+            "role": "assistant",
+            "content": assistant_response
+        })
+except JailbreakException:
+    print("Your request could not be processed. Please rephrase your question.")
     
 st.markdown(
     '<div class="chat-disclaimer">'

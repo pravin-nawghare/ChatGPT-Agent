@@ -5,6 +5,9 @@ from pypdf import PdfReader
 import docx2txt
 import json
 from langchain_core.messages import ToolMessage,AIMessage, AIMessageChunk
+from guardrails import Guard
+from guardrails_ai.detect_jailbreak import DetectJailbreak
+from guardrails_ai.toxic_language import ToxicLanguage
 print("inside utils.py file\n")
 # Default model for app
 DEFAULT_MODEL = settings.GEMINI_MODEL if settings.GEMINI_MODEL else "gemini-2.5-pro"
@@ -128,3 +131,26 @@ def extract_text_from_chunk(chunk) -> str:
 
         return "".join(text_parts)
     return ""
+
+jailbreak_guard = Guard().use(
+    DetectJailbreak(
+        threshold=0.9, # higher -> reduces false negatives
+        on_fail="exception",
+    )
+)
+
+toxicity_guard = Guard().use(
+    ToxicLanguage(
+        threshold=0.5, # less -> more sensitive
+        validation_method="sentence",
+        on_fail="exception",
+    )
+)
+
+class ToxicLanguageException(Exception):
+    """Raised when toxic language is detected."""
+    pass
+
+class JailbreakException(Exception):
+    """Raised when jailbreak attempt is detected."""
+    pass
