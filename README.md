@@ -224,7 +224,11 @@ Start the Streamlit frontend in a second terminal:
 
 ## Screenshots
 
+Full Screen UI
+
 [<image src="visuals/full%20screen%20ui.png" alt="Opening Page of Project" height="300px">](https://github.com/pravin-nawghare/ChatGPT-Agent/blob/main/visuals/full%20screen%20ui.png)
+
+Previous Conversations Loaded
 
 [<image src="visuals/previous%20conversations%20from%20histroy.png" alt="Previous Conversations" height="300px">](https://github.com/pravin-nawghare/ChatGPT-Agent/blob/main/visuals/previous%20conversations%20from%20histroy.png)
 
