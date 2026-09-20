@@ -3,8 +3,7 @@ from guardrails_ai.detect_jailbreak import DetectJailbreak
 
 class CompatibleDetectJailbreak(DetectJailbreak):
 
-    TEXT_CLASSIFIER_NAME = r"C:\Users\prave\.cache\huggingface\hub\models--zhx123--ftrobertallm\snapshots\edf8a6fa8e51a5e06b0139cc5c7d3358eeb79cf3\config.json"
-
+    TEXT_CLASSIFIER_NAME = "your_file_path"
     def _predict_jailbreak(self, prompts):
         predictions = self.text_classifier(prompts)
 
