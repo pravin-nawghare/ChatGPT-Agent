@@ -4,7 +4,9 @@ import sqlite3
 from pathlib import Path
 
 from config import settings
-from utils import jailbreak_guard, JailbreakException, ToxicLanguageException, toxicity_guard
+from utils import JailbreakException, ToxicLanguageException, toxicity_guard
+from jailbreak_guard import CompatibleDetectJailbreak
+jailbreak_guard = CompatibleDetectJailbreak()
 
 from langgraph.graph import START, END, StateGraph, MessagesState
 from langchain_google_genai import ChatGoogleGenerativeAI

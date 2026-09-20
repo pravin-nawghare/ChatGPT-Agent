@@ -29,8 +29,8 @@ class Settings:
     APP_PORT = os.getenv("APP_PORT")
     APP_HOST = os.getenv("APP_HOST")
 
-os.environ["LANGSMITH_TRACING"] = "true"
-os.environ["LANGCHAIN_PROJECT"] = os.getenv("LANGSMITH_PROJECT", "ChatGPT-Agent")
-os.environ["LANGSMITH_ENDPOINT"] = os.getenv("LANGSMITH_ENDPOINT", "https://api.smith.langchain.com")
+# os.environ["LANGSMITH_TRACING"] = "true"
+# os.environ["LANGCHAIN_PROJECT"] = os.getenv("LANGSMITH_PROJECT", "ChatGPT-Agent")
+# os.environ["LANGSMITH_ENDPOINT"] = os.getenv("LANGSMITH_ENDPOINT", "https://api.smith.langchain.com")
 
 settings = Settings()

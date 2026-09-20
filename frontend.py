@@ -4,7 +4,8 @@ import uuid
 import json
 import requests
 from utils import jailbreak_guard, JailbreakException
-
+from jailbreak_guard import CompatibleDetectJailbreak
+jailbreak_guard = CompatibleDetectJailbreak()
 
 # Initialize current conversation thread id in session state if not already present
 if "thread_id" not in st.session_state:
